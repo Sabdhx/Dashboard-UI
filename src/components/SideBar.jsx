@@ -5,6 +5,8 @@ function SideBar({ active, setActive }) {
     { name: "Purchase Order", key: "purchase" },
     { name: "Invoice", key: "invoice" },
     { name: "File Upload", key: "upload" },
+        { name: "todoList", key: "todoList" },
+
   ];
 
   return (
