@@ -4,7 +4,7 @@ import SideBar from "./SideBar";
 
 
 function Dashboard() {
-    const [active, setActive] = useState("");
+    const [active, setActive] = useState("todoList");
 
   return (
     <div className="w-full flex justify-between h-screen ">

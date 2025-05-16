@@ -1,14 +1,26 @@
 import React, { useState } from "react";
+import { supabase } from "../supabase-client";
 
 function SignIn() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const handleSubmit = (e) => {
+  const [session,setSession] = useState({})
+  const handleSubmit =async (e) => {
     e.preventDefault();
-    console.log("Username:", username);
+    console.log("email:", email);
     console.log("Password:", password);
+    try {
+          const {data,error} = await supabase.auth.signInWithPassword({email,password})
+          setSession(data.session) 
+            if(error){
+              console.error(error)
+            }
+    } catch (error) {
+             console.log(error)
+    }
   };
+
+
 
   return (
     <div className="flex items-center justify-center min-h-screen ">
@@ -18,12 +30,12 @@ function SignIn() {
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-gray-600 mb-1">Username</label>
+            <label className="block text-gray-600 mb-1">Email</label>
             <input
               type="text"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>

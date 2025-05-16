@@ -6,12 +6,39 @@ type data = {
   id: string;
   title: string;
   description: string;
+  user_id: string;
 };
 
 function TodoList({}: Props) {
-  const [Data, setData] = useState({ title: "", description: "" });
+  const [Data, setData] = useState({ title: "", description: "", user_id: "" });
   const [tasks, setTasks] = useState<any[]>([]);
   const [editTaskId, setEditTaskId] = useState<string | null>(null);
+  const [session, setSession] = useState({});
+
+  const gettingSession = async () => {
+    const currentSession = await supabase.auth.getSession();
+    setSession(currentSession);
+  };
+
+  useEffect(() => {
+    gettingSession();
+  }, []);
+
+  useEffect(() => {
+    const channel = supabase.channel("task_channel");
+    channel
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "todoList" },
+        (payload) => {
+          const newTasks = payload.new as data;
+          setTasks((prev) => [...prev, newTasks]);
+        }
+      )
+      .subscribe((status) => {
+        console.log(status);
+      });
+  }, []);
 
   const fetchData = async () => {
     const { data, error } = await supabase.from("todoList").select("*");
@@ -32,12 +59,14 @@ function TodoList({}: Props) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    Data.user_id = session?.data?.session?.user?.id;
+
     const { data, error } = await supabase
       .from("todoList")
       .insert(Data)
       .single();
     if (error) console.error("Insert error:", error.message);
-    setData({ title: "", description: "" });
+    setData({ title: "", description: "", user_id: "" });
     fetchData();
   };
 

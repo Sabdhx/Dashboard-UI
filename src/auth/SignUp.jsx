@@ -1,16 +1,16 @@
 import React, { useState } from "react";
+import { supabase } from "../supabase-client";
 
 function SignUp() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const handleSubmit = (e) => {
+  const handleSubmit =async (e) => {
     e.preventDefault();
-    console.log("Username:", username);
-    console.log("Email:", email);
-    console.log("Password:", password);
-    // Add sign up logic here
+    const {error} = supabase.auth.signUp({email,password})
+    if(error){
+          console.log("error",error)
+    }
   };
 
   return (
