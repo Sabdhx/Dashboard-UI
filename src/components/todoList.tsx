@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
 import { supabase } from "../supabase-client";
 
 type Props = {};
@@ -14,6 +14,7 @@ function TodoList({}: Props) {
   const [tasks, setTasks] = useState<any[]>([]);
   const [editTaskId, setEditTaskId] = useState<string | null>(null);
   const [session, setSession] = useState({});
+  const [inputFiles, setInputFiles] = useState<File | null>(null);
 
   const gettingSession = async () => {
     const currentSession = await supabase.auth.getSession();
@@ -50,26 +51,50 @@ function TodoList({}: Props) {
     const { error } = await supabase.from("todoList").delete().eq("id", id);
     if (error) console.error("Delete error:", error);
     alert("Task deleted successfully");
-    fetchData(); // No need for reload
+    fetchData();
   };
 
   useEffect(() => {
     fetchData();
   }, []);
+  
+
+
+   const uploadingImage=async(files:File):Promise<string | null>=>{
+    const imageName = `${files.name}-${Date.now()}`;
+    const {data,error} = await supabase.storage.from("taskimage").upload(imageName,files);
+    if(error){
+      console.error("the error occured in the operation is: ",error)
+    }
+    const { data: publicUrlData } = await supabase.storage.from("taskimage").getPublicUrl(imageName);
+    return publicUrlData.publicUrl;
+   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     Data.user_id = session?.data?.session?.user?.id;
-
+    let files: File | null = null;
+     if(inputFiles){
+      const imageUrlFile = await uploadingImage(inputFiles)
+     }
     const { data, error } = await supabase
       .from("todoList")
       .insert(Data)
+      .select()
       .single();
+
     if (error) console.error("Insert error:", error.message);
     setData({ title: "", description: "", user_id: "" });
     fetchData();
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setInputFiles(e.target.files[0]);
+    }
+  }
+
+  console.log(inputFiles);
   return (
     <div className="min-h-screen bg-white text-black flex flex-col items-center py-10 space-y-6">
       <h1 className="text-2xl font-bold">Task Manager CRUD</h1>
@@ -91,6 +116,8 @@ function TodoList({}: Props) {
           className="w-full px-4 py-2 border border-black rounded-md placeholder-gray-500"
           required
         ></textarea>
+              <input type="file" onChange={handleFileChange} className='bg-gray-200 w-[200px]'/>
+
         <button
           type="submit"
           className="w-full  bg-gray-800 hover:bg-gray-500 text-white py-2 rounded-md transition"
