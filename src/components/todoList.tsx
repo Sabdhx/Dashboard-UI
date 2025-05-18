@@ -7,10 +7,14 @@ type data = {
   title: string;
   description: string;
   user_id: string;
+  image_url:string
+
 };
 
 function TodoList({}: Props) {
-  const [Data, setData] = useState({ title: "", description: "", user_id: "" });
+  const [Data, setData] = useState({ title: "", description: "", user_id: "" ,image_url:""
+
+  });
   const [tasks, setTasks] = useState<any[]>([]);
   const [editTaskId, setEditTaskId] = useState<string | null>(null);
   const [session, setSession] = useState({});
@@ -62,36 +66,39 @@ function TodoList({}: Props) {
 
    const uploadingImage=async(files:File):Promise<string | null>=>{
     const imageName = `${files.name}-${Date.now()}`;
-    const {data,error} = await supabase.storage.from("taskimage").upload(imageName,files);
+    const {error} = await supabase.storage.from("taskimage").upload(imageName,files);
     if(error){
       console.error("the error occured in the operation is: ",error)
     }
-    const { data: publicUrlData } = await supabase.storage.from("taskimage").getPublicUrl(imageName);
-    return publicUrlData.publicUrl;
+    const { data } = await supabase.storage.from("taskimage").getPublicUrl(imageName);
+    return data.publicUrl
    }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     Data.user_id = session?.data?.session?.user?.id;
     let files: File | null = null;
+     Data.email = session?.data?.session?.user?.email
      if(inputFiles){
-      const imageUrlFile = await uploadingImage(inputFiles)
+       files = await uploadingImage(inputFiles)
      }
+     Data.image_url = files
+     console.log(files)
     const { data, error } = await supabase
       .from("todoList")
       .insert(Data)
       .select()
       .single();
 
-    if (error) console.error("Insert error:", error.message);
-    setData({ title: "", description: "", user_id: "" });
+    if (error) {console.error("Insert error:", error.message);}
+    setData({ title: "", description: "", user_id: "",image_url:"" });
     fetchData();
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setInputFiles(e.target.files[0]);
-    }
+      }
   }
 
   console.log(inputFiles);
